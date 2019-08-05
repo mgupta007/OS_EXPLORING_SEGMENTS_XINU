@@ -1,0 +1,91 @@
+.1. Xinu Memory Layout
+
+
+                             ------------------------------------>
+                                 From low to Higher addresses                                    
+                                                                           length=4096   length=0
+-------------------------------------------------------------------------------------------------------
+                 | |            | |            | |     |      |            | [Main]  |  [prnull]    |
+Text Segment     | |Data Segment| | BSS Segment| |heap | free |  Processes | Process |   process    |
+                 | |            | |            | |     | Space|   Stacks   |  Stack  |    Stack     |
+                 | |            | |            | |     |      |            |         |              |
+-------------------------------------------------------------------------------------------------------
+Start             ^              ^              ^                             ^      ^   ^           ^ 
+                  |              |              |                             |      |   |           |  
+Address(0x0)     etext          edata          end                         Stack   base  Stack     base
+                                                                          pointer       Pointer
+
+etext, edata and end points to the immediate first addresses after the text segment, data segment and BSS segment respectively.
+
+Addresses of edata, etext and end were inferred by using printsegaddress()function and are as follows:-
+
+etext:0x000193b7
+edata:0x0001e540
+end:  0x00026df8
+
+The stacks are always allocated fron the highest address availaible in the free space. In other words stack grows from higher addresses to lower.
+
+Adresses for stack pointer and base pointer for Main and prnull process are infered from printprocstks() function:
+
+[Main] Process                              [Prnull] Process
+Length=4096                                 Length = 0
+Stack Pointer address:0x00ffef90            Stack POinter Address:0x00ffff1c 
+base address: 0x00ffeff8                    base address: 0x00fffffc
+
+
+
+
+
+Q.2. Difference in stack top address before and after calling printtos()
+
+
+Scenario: Stack arrangement for just before and just after printtos() is called 
+
+       |   Argumments    |             But in our case, Pinttos is not receiving any arguments. So, there would be different values. It can be 
+       |    passed to    |<-EBP+2      local variables of the calling function.  
+       |    function     |
+       |-----------------|
+       |    Return       |<-EBP+1
+       |   Address       |
+       |                 |             As inferred from printtos() function:
+       |-----------------|             EBP would point to just after (address), when printtos is called and its address: 0x00ffefec
+       |   old Ebp       |             EBP+2 would point to just before (address), when the printtos is called and its address:0x00ffeff4
+ESP--->|.................|<---EBP
+       |                 |
+       |-----------------|
+ 
+
+
+But as soon as printtos() starts gettting executed, local variables of the printtos() would be pushed into the stack and ESP would then change and point to the new top of the stack.
+
+
+
+       |   Argumments    |              <------------Higher Address
+       |    passed to    |<-EBP+2           ^
+       |    function     |                  |  From Low to 
+       |-----------------|                  |   high address
+       |    Return       |<-EBP+1           |
+       |   Address       |                  |
+       |                 |                  |
+       |-----------------|                  
+       |   old Ebp       |
+       |.................|<---EBP
+       |     Local       |
+       |    variables    |
+       |   of Printtos   |
+       |-----------------|<----ESP points to new top of the stack as local varibales is pushed on stack.
+                             (Address = 0x00ffefa0)
+
+ 
+
+Q.3: Local variables in stack frame?
+     No I can't see all the local variables in the stack frame.
+
+
+           
+
+
+
+
+
+
